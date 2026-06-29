@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumina | Premium AI-Powered Photo Editor</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Lumina is a premium, web-based photo editor featuring real-time filters, precision adjustments, cropping, annotation drawing, text overlays, and intelligent AI auto-enhancement.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- App Container -->
+  <div class="app-container">
+    
+    <!-- Top Header Bar -->
+    <header class="app-header">
+      <div class="header-logo">
+        <div class="logo-icon">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <h1>Lumina</h1>
+        <span class="badge">PRO</span>
+      </div>
+      
+      <!-- Center Quick Controls (Undo/Redo) -->
+      <div class="header-controls">
+        <button id="undoBtn" class="control-btn" title="Undo (Ctrl+Z)" disabled>
+          <i class="fa-solid fa-arrow-rotate-left"></i>
+        </button>
+        <button id="redoBtn" class="control-btn" title="Redo (Ctrl+Y)" disabled>
+          <i class="fa-solid fa-arrow-rotate-right"></i>
+        </button>
+        <button id="resetBtn" class="control-btn danger" title="Reset All Changes" disabled>
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+      
+      <!-- Right Action Controls -->
+      <div class="header-actions">
+        <button id="downloadBtn" class="action-btn secondary" disabled>
+          <i class="fa-solid fa-download"></i> Download
+        </button>
+        <button id="saveServerBtn" class="action-btn primary" disabled>
+          <i class="fa-solid fa-cloud-arrow-up"></i> Save to Server
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Area -->
+    <main class="app-workspace">
+      
+      <!-- Left sidebar: Tab Selectors -->
+      <aside class="sidebar-tabs">
+        <button class="tab-trigger active" data-tab="upload" title="Upload Image">
+          <i class="fa-solid fa-file-image"></i>
+          <span>Upload</span>
+        </button>
+        <button class="tab-trigger" data-tab="enhance" title="Auto Enhance">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>Enhance</span>
+        </button>
+        <button class="tab-trigger" data-tab="adjust" title="Adjustments">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Adjust</span>
+        </button>
+        <button class="tab-trigger" data-tab="filters" title="Filters">
+          <i class="fa-solid fa-palette"></i>
+          <span>Filters</span>
+        </button>
+        <button class="tab-trigger" data-tab="crop" title="Crop & Transform">
+          <i class="fa-solid fa-crop-simple"></i>
+          <span>Transform</span>
+        </button>
+        <button class="tab-trigger" data-tab="draw" title="Annotate & Draw">
+          <i class="fa-solid fa-paintbrush"></i>
+          <span>Draw</span>
+        </button>
+        <button class="tab-trigger" data-tab="text" title="Add Text">
+          <i class="fa-solid fa-font"></i>
+          <span>Text</span>
+        </button>
+        <button class="tab-trigger" data-tab="backgrounds" title="Change Background">
+          <i class="fa-solid fa-images"></i>
+          <span>Background</span>
+        </button>
+        <button class="tab-trigger ai-tab-trigger" data-tab="aitools" title="AI Tools">
+          <i class="fa-solid fa-robot"></i>
+          <span>AI Tools</span>
+        </button>
+        <button class="tab-trigger" data-tab="passport" title="Passport Photo Maker">
+          <i class="fa-solid fa-id-card"></i>
+          <span>Passport</span>
+        </button>
+        <button class="tab-trigger" data-tab="merge" title="AI Two Person Merge">
+          <i class="fa-solid fa-people-group"></i>
+          <span>Merge</span>
+        </button>
+      </aside>
+
+      <!-- Center Area: Viewport with canvas -->
+      <section class="canvas-viewport" id="viewport">
+        <!-- Before File Loaded State -->
+        <div class="upload-placeholder" id="uploadPlaceholder">
+          <div class="placeholder-content">
+            <div class="placeholder-icon-ring">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <h3>Upload your creative photo</h3>
+            <p>Drag and drop your image here, or browse local files</p>
+            
+            <!-- Standard File Input Wrapper (User requested ID is exactly imageInput) -->
+            <label for="imageInput" class="custom-file-upload">
+              <i class="fa-solid fa-images"></i> Browse Files
+            </label>
+            <input type="file" id="imageInput" accept="image/*">
+            <span class="file-limits">Supports JPG, PNG, WebP up to 20MB</span>
+          </div>
+        </div>
+
+        <!-- Passport Page Sheet (Visible only in passport mode) -->
+        <div id="a4" style="display: none;"></div>
+
+        <!-- AI Two Person Merge Output Canvas (visible only in merge mode) -->
+        <div id="mergeOutputWrap" style="display:none; width:100%; height:100%; align-items:center; justify-content:center; flex-direction:column; gap:16px; overflow:auto; padding:24px; box-sizing:border-box;">
+          <!-- Empty state before generation -->
+          <div id="mergePlaceholderMsg" style="display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--text-muted); text-align:center;">
+            <i class="fa-solid fa-people-group" style="font-size:48px; opacity:0.3;"></i>
+            <div style="font-size:16px; font-weight:600; opacity:0.5;">Upload 2 photos & click Generate</div>
+            <div style="font-size:12px; opacity:0.35; max-width:260px;">Choose a background removal method from the panel, select your pose, then click Generate AI Photo</div>
+          </div>
+          <!-- Canvas output (hidden until generated) -->
+          <canvas id="mergeCanvas" style="display:none; max-width:100%; height:auto; border-radius:var(--radius-md); box-shadow:0 16px 48px rgba(0,0,0,0.5);"></canvas>
+          <!-- Action buttons (hidden until generated) -->
+          <div id="mergeBtns" style="display:none; gap:12px; flex-wrap:wrap; justify-content:center;">
+            <button id="mergeDownloadBtn" onclick="downloadMerge()" class="action-btn primary">
+              <i class="fa-solid fa-download"></i> Download 4K PNG
+            </button>
+            <button onclick="generateAI()" class="action-btn secondary">
+              <i class="fa-solid fa-rotate-right"></i> Regenerate
+            </button>
+          </div>
+        </div>
+
+        <!-- Canvas and Splitted Image Container (Visible only when file loaded) -->
+        <div class="editor-container" id="editorContainer" style="display: none;">
+          <!-- Visual Workspace Viewport wrapper -->
+          <div class="canvas-wrapper" id="canvasWrapper">
+            <!-- Active Canvas for editing/interactive tools -->
+            <canvas id="editorCanvas"></canvas>
+            
+            <!-- User's exact DOM structure for background replacement overlay / sync -->
+            <div class="editor" id="domLayerEditor" style="display: none;">
+              <img id="backgroundImage" class="background" src="backgrounds/park.jpg">
+              <img id="userImage" class="foreground">
+            </div>
+            
+            <!-- Before/After Split comparison layer -->
+            <div class="comparison-container" id="comparisonContainer" style="display: none;">
+              <canvas id="originalCanvas" class="original-canvas-overlay"></canvas>
+              <div class="comparison-divider" id="comparisonDivider">
+                <div class="divider-handle">
+                  <i class="fa-solid fa-arrows-left-right"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Viewport Controls (Zoom, Pan, Split Compare Toggle) -->
+          <div class="viewport-controls">
+            <button id="toggleCompareBtn" class="viewport-btn" title="Compare Before/After">
+              <i class="fa-solid fa-columns"></i> <span>Split View</span>
+            </button>
+            <div class="divider"></div>
+            <button id="zoomOutBtn" class="viewport-btn" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+            <span id="zoomScaleText" class="zoom-value">100%</span>
+            <button id="zoomInBtn" class="viewport-btn" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
+            <button id="zoomResetBtn" class="viewport-btn" title="Fit Screen"><i class="fa-solid fa-expand"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right sidebar: Action Control Panel -->
+      <aside class="control-panel">
+        
+        <!-- Welcome / Setup panel -->
+        <div class="panel-content active" data-panel="upload">
+          <div class="panel-header">
+            <h2>Welcome to Lumina</h2>
+            <p>Start your image creation by importing a photo.</p>
+          </div>
+          <div class="panel-body">
+            <div class="demo-images">
+              <h4>Or try one of our sample assets:</h4>
+              <div class="sample-grid">
+                <div class="sample-card" data-sample="scenery">
+                  <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=150&q=80" alt="Scenery">
+                  <span>Nature</span>
+                </div>
+                <div class="sample-card" data-sample="portrait">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="Portrait">
+                  <span>Portrait</span>
+                </div>
+                <div class="sample-card" data-sample="street">
+                  <img src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=150&q=80" alt="Street">
+                  <span>City</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. AI Enhance Panel -->
+        <div class="panel-content" data-panel="enhance">
+          <div class="panel-header">
+            <h2>AI Photo Enhancer</h2>
+            <p>Instantly balance exposures, optimize colors, and sharpen details with one tap.</p>
+          </div>
+          <div class="panel-body">
+            <div class="enhance-action-box">
+              <!-- User requested: <button id="enhanceBtn">Enhance Photo</button> -->
+              <button id="enhanceBtn" class="action-btn primary large w-full">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Enhance Photo
+              </button>
+            </div>
+            
+            <div class="control-group mt-6">
+              <div class="control-label">
+                <span>Enhancement Strength</span>
+                <span id="enhanceStrengthVal">80%</span>
+              </div>
+              <input type="range" id="enhanceStrength" min="0" max="100" value="80" class="premium-slider">
+            </div>
+
+            <div class="enhance-features-list">
+              <div class="feature-item">
+                <i class="fa-solid fa-check"></i>
+                <div>
+                  <h5>Smart White Balance</h5>
+                  <p>Removes yellow/blue color casts dynamically.</p>
+                </div>
+              </div>
+              <div class="feature-item">
+                <i class="fa-solid fa-check"></i>
+                <div>
+                  <h5>Histogram Equalization</h5>
+                  <p>Stretches shadow/highlight detail ranges.</p>
+                </div>
+              </div>
+              <div class="feature-item">
+                <i class="fa-solid fa-check"></i>
+                <div>
+                  <h5>Color Saturation Pop</h5>
+                  <p>Enhances flat color hues vibrantly.</p>
+                </div>
+              </div>
+              <div class="feature-item">
+                <i class="fa-solid fa-check"></i>
+                <div>
+                  <h5>Unsharp Mask Detail</h5>
+                  <p>Increases edge definition and clarity.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Manual Adjustments Panel -->
+        <div class="panel-content" data-panel="adjust">
+          <div class="panel-header">
+            <h2>Manual Adjustments</h2>
+            <p>Fine-tune colors, lighting, and detail structures.</p>
+          </div>
+          <div class="panel-body scrollable">
+            
+            <div class="control-section-title">Light</div>
+            
+            <div class="control-group">
+              <div class="control-label">
+                <span><i class="fa-solid fa-sun"></i> Brightness</span>
+                <span id="brightnessVal">0</span>
+              </div>
+              <input type="range" id="brightness" min="-100" max="100" value="0" class="premium-slider">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span><i class="fa-solid fa-circle-half-stroke"></i> Contrast</span>
+                <span id="contrastVal">0</span>
+              </div>
+              <input type="range" id="contrast" min="-100" max="100" value="0" class="premium-slider">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span><i class="fa-solid fa-circle-nodes"></i> Exposure</span>
+                <span id="exposureVal">0</span>
+              </div>
+              <input type="range" id="exposure" min="-100" max="100" value="0" class="premium-slider">
+            </div>
+
+            <div class="control-section-title">Color</div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span><i class="fa-solid fa-droplet"></i> Saturation</span>
+                <span id="saturationVal">0</span>
+              </div>
+              <input type="range" id="saturation" min="-100" max="100" value="0" class="premium-slider">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span><i class="fa-solid fa-temperature-three-quarters"></i> Warmth (Temp)</span>
+                <span id="warmthVal">0</span>
+              </div>
+              <input type="range" id="warmth" min="-100" max="100" value="0" class="premium-slider">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span><i class="fa-solid fa-palette"></i> Hue</span>
+                <span id="hueVal">0</span>
+              </div>
+              <input type="range" id="hue" min="-180" max="180" value="0" class="premium-slider">
+            </div>
+
+            <div class="control-section-title">Details & Vignette</div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span><i class="fa-solid fa-eye-slash"></i> Blur</span>
+                <span id="blurVal">0px</span>
+              </div>
+              <input type="range" id="blur" min="0" max="20" value="0" class="premium-slider">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span><i class="fa-solid fa-gem"></i> Sharpen</span>
+                <span id="sharpenVal">0</span>
+              </div>
+              <input type="range" id="sharpen" min="0" max="100" value="0" class="premium-slider">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span><i class="fa-solid fa-circle"></i> Vignette</span>
+                <span id="vignetteVal">0%</span>
+              </div>
+              <input type="range" id="vignette" min="0" max="100" value="0" class="premium-slider">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 3. Preset Filters Panel -->
+        <div class="panel-content" data-panel="filters">
+          <div class="panel-header">
+            <h2>Creative Filters</h2>
+            <p>Apply calibrated artistic color themes instantly.</p>
+          </div>
+          <div class="panel-body">
+            <div class="filters-grid">
+              <button class="filter-card active" data-filter="none">
+                <div class="filter-preview-box f-none"></div>
+                <span>Original</span>
+              </button>
+              <button class="filter-card" data-filter="vintage">
+                <div class="filter-preview-box f-vintage"></div>
+                <span>Vintage</span>
+              </button>
+              <button class="filter-card" data-filter="noir">
+                <div class="filter-preview-box f-noir"></div>
+                <span>Noir</span>
+              </button>
+              <button class="filter-card" data-filter="chrome">
+                <div class="filter-preview-box f-chrome"></div>
+                <span>Chrome</span>
+              </button>
+              <button class="filter-card" data-filter="polaroid">
+                <div class="filter-preview-box f-polaroid"></div>
+                <span>Polaroid</span>
+              </button>
+              <button class="filter-card" data-filter="cool">
+                <div class="filter-preview-box f-cool"></div>
+                <span>Cool Breeze</span>
+              </button>
+              <button class="filter-card" data-filter="warm">
+                <div class="filter-preview-box f-warm"></div>
+                <span>Sunset Warm</span>
+              </button>
+              <button class="filter-card" data-filter="dramatic">
+                <div class="filter-preview-box f-dramatic"></div>
+                <span>Dramatic</span>
+              </button>
+              <button class="filter-card" data-filter="sepia">
+                <div class="filter-preview-box f-sepia"></div>
+                <span>Sepia</span>
+              </button>
+              <button class="filter-card" data-filter="invert">
+                <div class="filter-preview-box f-invert"></div>
+                <span>Invert</span>
+              </button>
+            </div>
+            
+            <div class="control-group mt-6">
+              <div class="control-label">
+                <span>Filter Intensity</span>
+                <span id="filterIntensityVal">100%</span>
+              </div>
+              <input type="range" id="filterIntensity" min="0" max="100" value="100" class="premium-slider">
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Crop & Transform Panel -->
+        <div class="panel-content" data-panel="crop">
+          <div class="panel-header">
+            <h2>Crop & Rotate</h2>
+            <p>Cut out undesirable areas and re-align your framing.</p>
+          </div>
+          <div class="panel-body">
+            
+            <div class="crop-ratios">
+              <h4>Aspect Ratios:</h4>
+              <div class="ratio-buttons">
+                <button class="ratio-btn active" data-ratio="free">Freeform</button>
+                <button class="ratio-btn" data-ratio="1-1">1:1 Square</button>
+                <button class="ratio-btn" data-ratio="4-3">4:3 Photo</button>
+                <button class="ratio-btn" data-ratio="16-9">16:9 Cinema</button>
+                <button class="ratio-btn" data-ratio="9-16">9:16 Story</button>
+                <button class="ratio-btn" data-ratio="35-45">35:45 (Passport)</button>
+              </div>
+            </div>
+
+            <div class="transform-actions">
+              <h4>Transform Tools:</h4>
+              <div class="transform-grid">
+                <button id="rotateCCWBtn" class="control-btn" title="Rotate Left 90°">
+                  <i class="fa-solid fa-rotate-left"></i> <span>Rotate L</span>
+                </button>
+                <button id="rotateCWBtn" class="control-btn" title="Rotate Right 90°">
+                  <i class="fa-solid fa-rotate-right"></i> <span>Rotate R</span>
+                </button>
+                <button id="flipHBtn" class="control-btn" title="Flip Horizontal">
+                  <i class="fa-solid fa-arrows-left-right"></i> <span>Flip H</span>
+                </button>
+                <button id="flipVBtn" class="control-btn" title="Flip Vertical">
+                  <i class="fa-solid fa-arrows-up-down"></i> <span>Flip V</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="crop-actions-container">
+              <button id="applyCropBtn" class="action-btn primary large w-full" disabled>
+                <i class="fa-solid fa-check"></i> Apply Crop Boundary
+              </button>
+              <button id="cancelCropBtn" class="action-btn secondary w-full mt-2" style="display: none;">
+                <i class="fa-solid fa-xmark"></i> Cancel Crop
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Draw & Annotate Panel -->
+        <div class="panel-content" data-panel="draw">
+          <div class="panel-header">
+            <h2>Annotate & Draw</h2>
+            <p>Draw, sketch, or markup directly over your image.</p>
+          </div>
+          <div class="panel-body">
+            
+            <div class="draw-tool-selector">
+              <button id="brushToolBtn" class="tool-select-btn active" data-tool="brush">
+                <i class="fa-solid fa-paintbrush"></i> Brush
+              </button>
+              <button id="eraserToolBtn" class="tool-select-btn" data-tool="eraser">
+                <i class="fa-solid fa-eraser"></i> Eraser
+              </button>
+            </div>
+
+            <div class="control-group mt-4">
+              <div class="control-label">
+                <span>Brush Size</span>
+                <span id="brushSizeVal">10px</span>
+              </div>
+              <input type="range" id="brushSize" min="1" max="100" value="10" class="premium-slider">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>Brush Opacity</span>
+                <span id="brushOpacityVal">100%</span>
+              </div>
+              <input type="range" id="brushOpacity" min="1" max="100" value="100" class="premium-slider">
+            </div>
+
+            <div class="color-palette-section">
+              <h4>Brush Color:</h4>
+              <div class="color-picker-wrapper">
+                <input type="color" id="brushColor" value="#6366f1">
+                <span>Custom Color</span>
+              </div>
+              <div class="color-swatches">
+                <button class="swatch active" style="background-color: #6366f1;" data-color="#6366f1"></button>
+                <button class="swatch" style="background-color: #ef4444;" data-color="#ef4444"></button>
+                <button class="swatch" style="background-color: #10b981;" data-color="#10b981"></button>
+                <button class="swatch" style="background-color: #f59e0b;" data-color="#f59e0b"></button>
+                <button class="swatch" style="background-color: #3b82f6;" data-color="#3b82f6"></button>
+                <button class="swatch" style="background-color: #ec4899;" data-color="#ec4899"></button>
+                <button class="swatch" style="background-color: #ffffff;" data-color="#ffffff"></button>
+                <button class="swatch" style="background-color: #000000;" data-color="#000000"></button>
+              </div>
+            </div>
+            
+            <button id="clearDrawingBtn" class="action-btn secondary w-full mt-6">
+              <i class="fa-solid fa-eraser"></i> Clear Drawings
+            </button>
+          </div>
+        </div>
+
+        <!-- 6. Text Panel -->
+        <div class="panel-content" data-panel="text">
+          <div class="panel-header">
+            <h2>Text Overlays</h2>
+            <p>Add customizable dynamic text blocks to your photo.</p>
+          </div>
+          <div class="panel-body">
+            
+            <div class="text-inputs">
+              <div class="control-group">
+                <label for="textOverlayInput">Enter Text Content:</label>
+                <input type="text" id="textOverlayInput" placeholder="Type overlay text here..." class="premium-text-input">
+              </div>
+              
+              <div class="control-group">
+                <label for="fontFamilySelect">Font Family:</label>
+                <select id="fontFamilySelect" class="premium-select">
+                  <option value="Outfit" selected>Outfit (Modern)</option>
+                  <option value="'Plus Jakarta Sans'">Jakarta (Clean)</option>
+                  <option value="Arial">Arial (Classic)</option>
+                  <option value="'Georgia'">Georgia (Elegant)</option>
+                  <option value="'Courier New'">Courier (Tech)</option>
+                  <option value="'Impact'">Impact (Bold)</option>
+                </select>
+              </div>
+
+              <div class="control-group">
+                <div class="control-label">
+                  <span>Font Size</span>
+                  <span id="fontSizeVal">32px</span>
+                </div>
+                <input type="range" id="fontSize" min="12" max="150" value="32" class="premium-slider">
+              </div>
+
+              <div class="color-palette-section">
+                <h4>Text Color:</h4>
+                <div class="color-picker-wrapper">
+                  <input type="color" id="textColor" value="#ffffff">
+                  <span>Custom Color</span>
+                </div>
+              </div>
+
+              <div class="text-styles-grid">
+                <button id="boldTextBtn" class="style-toggle-btn" title="Bold Text">
+                  <i class="fa-solid fa-bold"></i>
+                </button>
+                <button id="italicTextBtn" class="style-toggle-btn" title="Italic Text">
+                  <i class="fa-solid fa-italic"></i>
+                </button>
+                <button id="alignLeftTextBtn" class="style-toggle-btn active" data-align="left" title="Align Left">
+                  <i class="fa-solid fa-align-left"></i>
+                </button>
+                <button id="alignCenterTextBtn" class="style-toggle-btn" data-align="center" title="Align Center">
+                  <i class="fa-solid fa-align-center"></i>
+                </button>
+                <button id="alignRightTextBtn" class="style-toggle-btn" data-align="right" title="Align Right">
+                  <i class="fa-solid fa-align-right"></i>
+                </button>
+              </div>
+              
+              <button id="addTextBtn" class="action-btn primary large w-full mt-6">
+                <i class="fa-solid fa-plus"></i> Add Text Overlay
+              </button>
+            </div>
+
+            <div class="text-instructions mt-6">
+              <h5>Tip:</h5>
+              <p><i class="fa-solid fa-info-circle"></i> Once text is added, you can click and drag it on the image canvas. Select any text block on canvas to edit its properties or delete it.</p>
+            </div>
+            
+            <button id="deleteTextBtn" class="action-btn danger w-full mt-2" style="display: none;">
+              <i class="fa-solid fa-trash-can"></i> Delete Selected Text
+            </button>
+          </div>
+        </div>
+
+        <!-- 7. Background Layer & Chroma Key Panel -->
+        <div class="panel-content" data-panel="backgrounds">
+          <div class="panel-header">
+            <h2>Select Background</h2>
+            <p>Superimpose your subject on pre-selected scenery and remove background colors.</p>
+          </div>
+          <div class="panel-body scrollable">
+            
+            <!-- Auto Background Remover section -->
+            <div class="control-group">
+              <button onclick="removeBackground()" class="action-btn primary large w-full">
+                ✨ Remove Background
+              </button>
+            </div>
+            
+            <div class="control-group mt-2" id="outputPreviewGroup" style="display:none;">
+              <label>Auto-Cutout Output Preview:</label>
+              <div class="output-preview-box" style="border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 8px; background: rgba(0,0,0,0.2); text-align:center;">
+                <img id="output" width="400" style="max-width:100%; height:auto; border-radius: var(--radius-sm);" alt="Background Removed Cutout">
+              </div>
+            </div>
+            
+            <div class="control-group">
+              <label for="backgroundSelect">Choose Background Scene:</label>
+              <select id="backgroundSelect" class="premium-select">
+                <option value="">Choose Background</option>
+                <option value="backgrounds/park.jpg">Park</option>
+                <option value="backgrounds/beach.jpg">Beach</option>
+                <option value="backgrounds/mountains.jpg">Mountains</option>
+                <option value="backgrounds/studio.jpg">Studio</option>
+                <option value="backgrounds/office.jpg">Office</option>
+                <option value="backgrounds/sky.jpg">Sky</option>
+                <option value="backgrounds/sunset.jpg">Sunset</option>
+                <option value="backgrounds/forest.jpg">Forest</option>
+                <option value="backgrounds/flowers.jpg">Flowers</option>
+                <option value="backgrounds/waterfall.jpg">Waterfall</option>
+                <option value="backgrounds/temple.jpg">Temple</option>
+                <option value="backgrounds/city.jpg">City</option>
+                <option value="backgrounds/village.jpg">Village</option>
+                <option value="backgrounds/desert.jpg">Desert</option>
+                <option value="backgrounds/snow.jpg">Snow</option>
+                <option value="backgrounds/rain.jpg">Rain</option>
+                <option value="backgrounds/cafe.jpg">Cafe</option>
+                <option value="backgrounds/library.jpg">Library</option>
+                <option value="backgrounds/wedding.jpg">Wedding</option>
+                <option value="backgrounds/indian-festival.jpg">Indian Festival</option>
+              </select>
+            </div>
+            
+            <div class="control-section-title">Chroma Key / Color Eraser</div>
+            
+            <div class="control-group">
+              <button id="activateKeyerBtn" class="action-btn secondary w-full">
+                <i class="fa-solid fa-eye-dropper"></i> Pick Chroma Key Color
+              </button>
+              <div id="keyColorIndicatorWrapper" class="mt-2" style="display:none; align-items:center; justify-content:space-between; width:100%; background:rgba(0,0,0,0.15); padding:8px; border-radius:var(--radius-sm); border:1px solid var(--border-glass);">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:11px; color:var(--text-muted);">Selected:</span>
+                  <div id="keyColorIndicator" style="width:16px; height:16px; border-radius:50%; border:1px solid #fff; background-color:transparent;"></div>
+                </div>
+                <button id="disableKeyerBtn" class="control-btn danger" title="Clear Color Selection" style="width:24px; height:24px;"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>Similarity Range</span>
+                <span id="keyToleranceVal">30</span>
+              </div>
+              <input type="range" id="keyTolerance" min="5" max="150" value="30" class="premium-slider">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>Edge Softness (Feather)</span>
+                <span id="keyFeatherVal">2px</span>
+              </div>
+              <input type="range" id="keyFeather" min="0" max="20" value="2" class="premium-slider">
+            </div>
+            
+            <div class="control-section-title">Overlay Transform</div>
+            
+            <div class="control-group">
+              <div class="control-label">
+                <span>Scale Foreground</span>
+                <span id="fgScaleVal">100%</span>
+              </div>
+              <input type="range" id="fgScale" min="10" max="250" value="100" class="premium-slider">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>Position X Offset</span>
+                <span id="fgOffsetXVal">0px</span>
+              </div>
+              <input type="range" id="fgOffsetX" min="-500" max="500" value="0" class="premium-slider">
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>Position Y Offset</span>
+                <span id="fgOffsetYVal">0px</span>
+              </div>
+              <input type="range" id="fgOffsetY" min="-500" max="500" value="0" class="premium-slider">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 8. Passport Photo Maker Panel -->
+        <div class="panel-content" data-panel="passport">
+          <div class="panel-header">
+            <h2>Passport Photo Maker</h2>
+            <p>Generate high-resolution cropped passport photos with local AI background removal.</p>
+          </div>
+          <div class="panel-body">
+            
+            <!-- Standard File Upload (User requested id is upload) -->
+            <div class="control-group">
+              <label for="upload" style="display:block; margin-bottom:8px; font-size:12px; font-weight:600; color:var(--text-muted);">Upload Photo:</label>
+              <input type="file" id="upload" accept="image/*" class="premium-file-input">
+            </div>
+
+            <!-- AI Status indicator -->
+            <div id="passportAiStatus" style="display:none; font-size:12px; margin-bottom:12px; padding:10px; border-radius:var(--radius-sm); background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.3); color:#a5b4fc;">
+              <i class="fa-solid fa-spinner fa-spin" style="margin-right:8px;"></i> <span id="passportStatusText">Loading AI model...</span>
+            </div>
+
+            <!-- Single cropped canvas preview -->
+            <div class="control-group" style="display:flex; flex-direction:column; align-items:center; margin-bottom:16px;">
+              <label style="display:block; width:100%; margin-bottom:8px; font-size:12px; font-weight:600; color:var(--text-muted);">Passport Preview:</label>
+              <canvas id="passportCanvas" style="max-width:100%; height:auto; border:1px solid var(--border-glass); border-radius:var(--radius-sm); box-shadow:0 8px 24px rgba(0,0,0,0.3); background:#eee;"></canvas>
+            </div>
+
+            <!-- Background Color choice -->
+            <div class="control-group">
+              <label style="display:block; margin-bottom:8px; font-size:12px; font-weight:600; color:var(--text-muted);">Background Color:</label>
+              <div class="color-swatches" id="passportBgSwatches" style="display:flex; gap:8px;">
+                <button class="swatch active" style="background-color: #ffffff; border:1px solid rgba(255,255,255,0.2);" data-bg="#ffffff" title="White"></button>
+                <button class="swatch" style="background-color: #a6c8e0; border:1px solid rgba(255,255,255,0.2);" data-bg="#a6c8e0" title="Light Blue"></button>
+                <button class="swatch" style="background-color: #e0e0e0; border:1px solid rgba(255,255,255,0.2);" data-bg="#e0e0e0" title="Light Grey"></button>
+                <button class="swatch" style="background: repeating-linear-gradient(45deg,#ccc,#ccc 4px,#eee 4px,#eee 8px); border:1px solid rgba(255,255,255,0.2);" data-bg="transparent" title="Transparent"></button>
+              </div>
+            </div>
+
+            <!-- AI Passport Options -->
+            <div class="control-group" style="margin-top:16px;">
+              <label style="display:block; margin-bottom:8px; font-size:12px; font-weight:600; color:var(--text-muted);">AI Passport Optimization:</label>
+              <div class="ai-settings-group" style="margin-top:0; padding:8px 12px; background:rgba(255,255,255,0.015);">
+                <label class="ai-toggle-row" style="padding:5px 0;">
+                  <span class="ai-toggle-label" style="font-size:11.5px;">Auto Center & Head Size (70-80%)</span>
+                  <div class="ai-toggle-switch">
+                    <input type="checkbox" id="passportAutoHead" checked onchange="redrawPassportCanvas()">
+                    <span class="ai-toggle-knob"></span>
+                  </div>
+                </label>
+                <label class="ai-toggle-row" style="padding:5px 0;">
+                  <span class="ai-toggle-label" style="font-size:11.5px;">AI Lighting & Color Balance</span>
+                  <div class="ai-toggle-switch">
+                    <input type="checkbox" id="passportAutoLighting" checked onchange="redrawPassportCanvas()">
+                    <span class="ai-toggle-knob"></span>
+                  </div>
+                </label>
+                <label class="ai-toggle-row" style="padding:5px 0; border-bottom:none;">
+                  <span class="ai-toggle-label" style="font-size:11.5px;">Smooth Edge Refinement</span>
+                  <div class="ai-toggle-switch">
+                    <input type="checkbox" id="passportAutoFeather" checked onchange="redrawPassportCanvas()">
+                    <span class="ai-toggle-knob"></span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Copies selection -->
+            <div class="control-group" style="margin-top:16px;">
+              <label for="copies" style="display:block; margin-bottom:8px; font-size:12px; font-weight:600; color:var(--text-muted);">Select Copies:</label>
+              <select id="copies" class="premium-select w-full">
+                <option value="1">1 Photo</option>
+                <option value="2">2 Photos</option>
+                <option value="4">4 Photos</option>
+                <option value="6" selected>6 Photos</option>
+                <option value="8">8 Photos</option>
+                <option value="12">12 Photos</option>
+              </select>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px;">
+              <button onclick="generate()" class="action-btn primary large">Generate</button>
+              <button onclick="window.print()" class="action-btn secondary large"><i class="fa-solid fa-print"></i> Print</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 9. AI Two Person Merge Panel -->
+        <div class="panel-content" data-panel="merge">
+          <div class="panel-header">
+            <h2>✨ AI Two Person Merge</h2>
+            <p>Upload two portraits — full AI pipeline composites them into a stunning photo.</p>
+          </div>
+          <div class="panel-body scrollable">
+
+            <!-- Person uploads -->
+            <div class="merge-upload-row">
+              <div class="merge-person-card" id="mergeCard1">
+                <label for="person1" class="merge-person-label">
+                  <div class="merge-person-thumb" id="mergeThumb1">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Person 1</span>
+                  </div>
+                </label>
+                <input type="file" id="person1" accept="image/*" style="display:none;">
+              </div>
+              <div class="merge-person-card" id="mergeCard2">
+                <label for="person2" class="merge-person-label">
+                  <div class="merge-person-thumb" id="mergeThumb2">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Person 2</span>
+                  </div>
+                </label>
+                <input type="file" id="person2" accept="image/*" style="display:none;">
+              </div>
+            </div>
+
+            <!-- Pose selector -->
+            <div class="control-section-title" style="margin-top:14px;">Choose Pose</div>
+            <select id="pose" class="premium-select w-full" style="margin-top:6px;">
+              <option value="standing">❤️ Standing Together</option>
+              <option value="hands">🤝 Holding Hands</option>
+              <option value="wedding">💍 Wedding Pose</option>
+              <option value="garden">🌳 Garden Pose</option>
+              <option value="beach">🏖️ Beach Pose</option>
+              <option value="indian">🕌 Indian Traditional Pose</option>
+              <option value="passport">📷 Passport Side by Side</option>
+              <option value="family">👨‍👩‍👧 Family Pose</option>
+              <option value="sitting">🪑 Sitting Together</option>
+              <option value="walking">🚶 Walking Together</option>
+              <option value="couple">💑 Couple Portrait</option>
+              <option value="birthday">🎂 Birthday Pose</option>
+              <option value="party">🎉 Party Pose</option>
+              <option value="graduation">🎓 Graduation Pose</option>
+            </select>
+
+            <!-- Background removal method -->
+            <div class="control-section-title" style="margin-top:14px;">Background Removal</div>
+            <select id="mergeBgRemovalMethod" class="premium-select w-full" style="margin-top:6px;" onchange="updateMergeBgMethod(this)">
+              <option value="ai" selected>🤖 AI Model (High Quality, ~177MB load)</option>
+              <option value="color">⚡ Instant Color Key (Fast, solid bg)</option>
+              <option value="none">❌ Keep Original Background</option>
+            </select>
+
+            <!-- Output quality -->
+            <div class="control-section-title" style="margin-top:14px;">Output Quality</div>
+            <div style="display:flex; gap:8px; margin-top:6px;">
+              <button class="ratio-btn" id="mergeQualityHD" onclick="setMergeQuality('hd')">HD (1920×1080)</button>
+              <button class="ratio-btn active" id="mergeQuality4K" onclick="setMergeQuality('4k')">4K (3840×2160)</button>
+            </div>
+
+            <!-- Generate button -->
+            <button onclick="generateAI()" id="mergeGenerateBtn" class="action-btn primary large w-full" style="margin-top:18px;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Generate AI Photo
+            </button>
+
+            <!-- AI Pipeline progress tracker -->
+            <div id="mergePipeline" style="display:none; margin-top:18px;">
+              <div class="pipeline-title">AI Pipeline</div>
+              <div class="pipeline-steps" id="pipelineSteps">
+                <div class="pipe-step" id="pstep-face"><span class="pipe-icon">🔍</span><span class="pipe-label">Face Alignment Check</span><span class="pipe-status"></span></div>
+                <div class="pipe-arrow">▼</div>
+                <div class="pipe-step" id="pstep-bg1"><span class="pipe-icon">✂️</span><span class="pipe-label">Background Removal P1</span><span class="pipe-status"></span></div>
+                <div class="pipe-arrow">▼</div>
+                <div class="pipe-step" id="pstep-bg2"><span class="pipe-icon">✂️</span><span class="pipe-label">Background Removal P2</span><span class="pipe-status"></span></div>
+                <div class="pipe-arrow">▼</div>
+                <div class="pipe-step" id="pstep-fid"><span class="pipe-icon">🧬</span><span class="pipe-label">Face Original Protection</span><span class="pipe-status"></span></div>
+                <div class="pipe-arrow">▼</div>
+                <div class="pipe-step" id="pstep-body"><span class="pipe-icon">🎚️</span><span class="pipe-label">Subject Size Calibration</span><span class="pipe-status"></span></div>
+                <div class="pipe-arrow">▼</div>
+                <div class="pipe-step" id="pstep-pose"><span class="pipe-icon">🖼️</span><span class="pipe-label">Thematic Scene Composite</span><span class="pipe-status"></span></div>
+                <div class="pipe-arrow">▼</div>
+                <div class="pipe-step" id="pstep-light"><span class="pipe-icon">💡</span><span class="pipe-label">Lighting Match</span><span class="pipe-status"></span></div>
+                <div class="pipe-arrow">▼</div>
+                <div class="pipe-step" id="pstep-shadow"><span class="pipe-icon">🌑</span><span class="pipe-label">Shadow Match</span><span class="pipe-status"></span></div>
+                <div class="pipe-arrow">▼</div>
+                <div class="pipe-step" id="pstep-color"><span class="pipe-icon">🎨</span><span class="pipe-label">Color Match</span><span class="pipe-status"></span></div>
+                <div class="pipe-arrow">▼</div>
+                <div class="pipe-step" id="pstep-upscale"><span class="pipe-icon">⬆️</span><span class="pipe-label">4K High-Res Render</span><span class="pipe-status"></span></div>
+                <div class="pipe-arrow">▼</div>
+                <div class="pipe-step" id="pstep-final"><span class="pipe-icon">💾</span><span class="pipe-label">Photo Ready</span><span class="pipe-status"></span></div>
+              </div>
+
+              <!-- Speed/caching tip -->
+              <div id="cachingTip" style="margin-top:12px; padding:10px; border-radius:var(--radius-sm); background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.3); color:#fef08a; font-size:11px; line-height:1.4;">
+                <i class="fa-solid fa-lightbulb" style="margin-right:6px; color:#fbbf24;"></i>
+                <strong>Speed Tip:</strong> Running under <code>file://</code> disables browser caching. Run a local server (e.g. <code>python -m http.server</code>) to make the model load instantly on subsequent runs.
+              </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════ -->
+            <!-- AI Identity Preservation Settings              -->
+            <!-- ══════════════════════════════════════════════ -->
+            <div style="margin-top:18px;">
+              <button class="ai-settings-header" onclick="toggleAISettings()" id="aiSettingsToggle">
+                <span>⚙️ AI Identity Settings</span>
+                <i class="fa-solid fa-chevron-down" id="aiSettingsChevron"></i>
+              </button>
+
+              <div id="aiSettingsBody" style="display:none;">
+
+                <!-- 🛡️ Face Protection -->
+                <div class="ai-settings-group">
+                  <div class="ai-settings-group-title">🛡️ Face Protection</div>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Preserve Original Face</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="preserveOriginalFace" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Lock Face Identity</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="lockFaceIdentity" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Face Swap <span class="ai-badge danger">Disabled</span></span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="faceSwap" onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Regenerate Face <span class="ai-badge danger">Off</span></span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="regenerateFace" onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Modify Face</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="modifyFace" onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                </div>
+
+                <!-- 👤 Keep Appearance -->
+                <div class="ai-settings-group">
+                  <div class="ai-settings-group-title">👤 Keep Appearance</div>
+                  <div class="ai-toggle-grid">
+                    <label class="ai-toggle-chip"><input type="checkbox" data-key="preserveEyes" checked onchange="updateAISetting(this)"><span>👁️ Eyes</span></label>
+                    <label class="ai-toggle-chip"><input type="checkbox" data-key="preserveNose" checked onchange="updateAISetting(this)"><span>👃 Nose</span></label>
+                    <label class="ai-toggle-chip"><input type="checkbox" data-key="preserveMouth" checked onchange="updateAISetting(this)"><span>👄 Mouth</span></label>
+                    <label class="ai-toggle-chip"><input type="checkbox" data-key="preserveHair" checked onchange="updateAISetting(this)"><span>💇 Hair</span></label>
+                    <label class="ai-toggle-chip"><input type="checkbox" data-key="preserveBeard" checked onchange="updateAISetting(this)"><span>🧔 Beard</span></label>
+                    <label class="ai-toggle-chip"><input type="checkbox" data-key="preserveGlasses" checked onchange="updateAISetting(this)"><span>🕶️ Glasses</span></label>
+                    <label class="ai-toggle-chip"><input type="checkbox" data-key="preserveSkinTone" checked onchange="updateAISetting(this)"><span>🖐️ Skin Tone</span></label>
+                    <label class="ai-toggle-chip"><input type="checkbox" data-key="preserveExpression" checked onchange="updateAISetting(this)"><span>😊 Expression</span></label>
+                  </div>
+                </div>
+
+                <!-- 🕺 Body Editing -->
+                <div class="ai-settings-group">
+                  <div class="ai-settings-group-title">🕺 Body Editing Only</div>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Body Pose Only</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="bodyPoseOnly" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Allow Pose Change</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="allowPoseChange" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Allow Background Change</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="allowBackgroundChange" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Allow Clothes Change <span class="ai-badge muted">Off</span></span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="allowClothesChange" onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                </div>
+
+                <!-- ✨ AI Processing -->
+                <div class="ai-settings-group">
+                  <div class="ai-settings-group-title">✨ AI Processing</div>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Auto Background Removal</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="autoBackgroundRemoval" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">AI Body Generation</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="aiBodyGeneration" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Face Restoration</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="faceRestore" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">HD Enhancement</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="hdEnhance" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Lighting Match</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="lightingMatch" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Color Match</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="colorMatch" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">Shadow Match</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="shadowMatch" checked onchange="updateAISetting(this)"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                </div>
+
+                <!-- 🎭 Pose Modes -->
+                <div class="ai-settings-group">
+                  <div class="ai-settings-group-title">🎭 Special Modes</div>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">🕌 Indian Wedding Mode</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="indianWeddingMode" onchange="updateAIMode(this,'indian')"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">💑 Couple Mode</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="coupleMode" onchange="updateAIMode(this,'couple')"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                  <label class="ai-toggle-row">
+                    <span class="ai-toggle-label">👨‍👩‍👧 Family Mode</span>
+                    <div class="ai-toggle-switch"><input type="checkbox" data-key="familyMode" onchange="updateAIMode(this,'family')"><span class="ai-toggle-knob"></span></div>
+                  </label>
+                </div>
+
+                <!-- 📤 Export -->
+                <div class="ai-settings-group">
+                  <div class="ai-settings-group-title">📤 Export Settings</div>
+                  <div style="display:flex; gap:6px; margin-bottom:10px;">
+                    <button class="ratio-btn active" id="exportPNG" onclick="setExportFormat('PNG')">🖼️ PNG</button>
+                    <button class="ratio-btn" id="exportJPG" onclick="setExportFormat('JPG')">📷 JPG</button>
+                  </div>
+
+                  <div class="ai-slider-row">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                      <span class="ai-toggle-label">Identity Strength</span>
+                      <span class="ai-slider-val" id="identityStrengthVal">100%</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="100" data-key="identityStrength"
+                      class="ai-slider" oninput="updateAISlider(this,'identityStrengthVal','%')">
+                  </div>
+
+                  <div class="ai-slider-row">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                      <span class="ai-toggle-label">Face Consistency</span>
+                      <span class="ai-slider-val" id="faceConsistencyVal">100%</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="100" data-key="faceConsistency"
+                      class="ai-slider" oninput="updateAISlider(this,'faceConsistencyVal','%')">
+                  </div>
+                </div>
+
+              </div><!-- /aiSettingsBody -->
+            </div><!-- /settings wrapper -->
+
+          </div><!-- /panel-body -->
+        </div><!-- /panel-content merge -->
+
+      </aside>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- AI Chat Modal (fullscreen overlay)                           -->
+    <!-- ============================================================ -->
+    <div id="aiChatModal" class="ai-modal" style="display:none;">
+      <div class="ai-modal-backdrop" onclick="closeAIChat()"></div>
+      <div class="ai-modal-box">
+        <div class="ai-modal-header">
+          <div class="ai-modal-title">
+            <div class="ai-bot-avatar"><i class="fa-solid fa-robot"></i></div>
+            <div>
+              <h3>Lumina AI Assistant</h3>
+              <span class="ai-status-dot"></span><small>Online · Powered by AI</small>
+            </div>
+          </div>
+          <button class="ai-close-btn" onclick="closeAIChat()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="ai-chat-messages" id="aiChatMessages">
+          <div class="ai-msg bot">
+            <div class="ai-msg-avatar"><i class="fa-solid fa-robot"></i></div>
+            <div class="ai-msg-bubble">Hi! I'm your Lumina AI assistant 👋<br>Ask me how to edit your photo, get creative tips, or anything about photography!</div>
+          </div>
+        </div>
+        <div class="ai-chat-input-row">
+          <input type="text" id="aiChatInput" class="ai-chat-input" placeholder="Ask anything about your photo…" autocomplete="off">
+          <button class="ai-send-btn" onclick="sendAIMessage()" id="aiSendBtn">
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- AI Image Generator Modal                                     -->
+    <!-- ============================================================ -->
+    <div id="aiImageModal" class="ai-modal" style="display:none;">
+      <div class="ai-modal-backdrop" onclick="closeAIImageModal()"></div>
+      <div class="ai-modal-box ai-image-box">
+        <div class="ai-modal-header">
+          <div class="ai-modal-title">
+            <div class="ai-bot-avatar gradient-avatar"><i class="fa-solid fa-image"></i></div>
+            <div>
+              <h3>AI Image Generator</h3>
+              <small>Describe any image and generate it instantly</small>
+            </div>
+          </div>
+          <button class="ai-close-btn" onclick="closeAIImageModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="ai-gen-body">
+          <textarea id="aiImagePrompt" class="ai-gen-textarea" placeholder="e.g. A cinematic portrait of a woman in golden hour lighting, shallow depth of field, 85mm lens…" rows="4"></textarea>
+          <div class="ai-gen-options">
+            <select id="aiImageStyle" class="premium-select">
+              <option value="photorealistic">Photorealistic</option>
+              <option value="digital-art">Digital Art</option>
+              <option value="oil-painting">Oil Painting</option>
+              <option value="watercolor">Watercolor</option>
+              <option value="anime">Anime</option>
+              <option value="3d-render">3D Render</option>
+            </select>
+            <select id="aiImageAspect" class="premium-select">
+              <option value="1:1">Square 1:1</option>
+              <option value="16:9">Landscape 16:9</option>
+              <option value="9:16">Portrait 9:16</option>
+              <option value="4:3">Classic 4:3</option>
+            </select>
+          </div>
+          <button class="action-btn primary large w-full" onclick="runGenerateImage()" id="aiGenBtn">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Image
+          </button>
+          <div id="aiGenPreview" class="ai-gen-preview" style="display:none;">
+            <img id="aiGenImg" alt="AI Generated">
+            <div class="ai-gen-actions">
+              <button class="action-btn secondary" onclick="loadAIGeneratedImage()"><i class="fa-solid fa-file-import"></i> Load into Editor</button>
+              <a id="aiGenDownloadLink" class="action-btn secondary" download="ai-generated.png"><i class="fa-solid fa-download"></i> Download</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden preview sync -->
+    <div class="hidden-preview-container" style="display:none;">
+      <img id="preview" width="350" alt="Lumina Image Sync Preview">
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- AI Tools inline panel (injected into right sidebar via JS) -->
+    <template id="aiToolsPanelTpl">
+      <div class="panel-content" data-panel="aitools" id="aiToolsPanel">
+        <div class="panel-header">
+          <h2>✨ AI Tools</h2>
+          <p>Supercharge your edits with artificial intelligence.</p>
+        </div>
+        <div class="panel-body">
+
+          <!-- 1. AI Chat -->
+          <div class="ai-tool-card" onclick="openAIChat()">
+            <div class="ai-tool-icon" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);">
+              <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="ai-tool-info">
+              <h4>AI Chat Assistant</h4>
+              <p>Ask questions, get editing tips & creative ideas</p>
+            </div>
+            <i class="fa-solid fa-chevron-right ai-tool-arrow"></i>
+          </div>
+
+          <!-- 2. Remove Background -->
+          <div class="ai-tool-card" onclick="removeBackground()">
+            <div class="ai-tool-icon" style="background: linear-gradient(135deg,#06b6d4,#0284c7);">
+              <i class="fa-solid fa-scissors"></i>
+            </div>
+            <div class="ai-tool-info">
+              <h4>Remove Background</h4>
+              <p>Instantly cut out subjects with AI precision</p>
+            </div>
+            <i class="fa-solid fa-chevron-right ai-tool-arrow"></i>
+          </div>
+
+          <!-- 3. HD Face Enhance -->
+          <div class="ai-tool-card" onclick="enhanceFace()">
+            <div class="ai-tool-icon" style="background: linear-gradient(135deg,#f59e0b,#ef4444);">
+              <i class="fa-solid fa-face-smile-beam"></i>
+            </div>
+            <div class="ai-tool-info">
+              <h4>HD Face Enhance</h4>
+              <p>Upscale & restore facial details in portraits</p>
+            </div>
+            <i class="fa-solid fa-chevron-right ai-tool-arrow"></i>
+          </div>
+
+          <!-- 4. AI Image Generator -->
+          <div class="ai-tool-card" onclick="generateImage()">
+            <div class="ai-tool-icon" style="background: linear-gradient(135deg,#10b981,#059669);">
+              <i class="fa-solid fa-image"></i>
+            </div>
+            <div class="ai-tool-info">
+              <h4>AI Image Generator</h4>
+              <p>Create stunning images from text descriptions</p>
+            </div>
+            <i class="fa-solid fa-chevron-right ai-tool-arrow"></i>
+          </div>
+
+          <div class="ai-divider"></div>
+
+          <!-- Quick Action Row (user's original button layout) -->
+          <div class="ai-tools">
+              <button onclick="openAIChat()">🤖 AI Chat</button>
+              <button onclick="removeBackground()">✨ Remove Background</button>
+              <button onclick="enhanceFace()">HD Face</button>
+              <button onclick="generateImage()">AI Image</button>
+          </div>
+
+        </div>
+      </div>
+    </template>
+
+  </div>
+
+  <!-- Custom Javascript -->
+  <script src="script.js"></script>
+</body>
+</html>
